@@ -227,10 +227,14 @@ class PasswordWindow(QtGui.QWidget):
             conn.execute("INSERT INTO password VALUES (NULL,?,?,?)", _sqliteInput)
             self.sqlite.commit()
         except sqlite3.Error, e:
+            self._statInput.setText("SQLite input fail!")
             print("Oops!\n %s" % e.args[0])
         else:
+            self._statInput.setText("Done")
+
             _numRows = self._dataGrid.rowCount()
             self._dataGrid.insertRow(_numRows)
+
             _rowUser = QtGui.QTableWidgetItem(self._userInput.text())
             _rowPass = QtGui.QTableWidgetItem(self._passInput.text())
             _rowDesc = QtGui.QTableWidgetItem(self._descInput.toPlainText())
@@ -280,7 +284,6 @@ class PasswordWindow(QtGui.QWidget):
             #self._insertDataToDatabase(self._userInput.text(), self._passInput.text(), self._descInput.toPlainText())
             # so ist schöner glaub ich
             self._insertDataToDatabase()
-            self._statInput.setText("Done")
 
     def _buttonClear(self):
         self._userInput.setText("")
