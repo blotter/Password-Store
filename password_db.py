@@ -25,6 +25,47 @@ from PyQt4 import QtCore
 from base64 import b64encode
 from base64 import b64decode
 
+class frickelAES_CBC(object):
+    def __init__(self, password, initialvector):
+        self.blockSize = 32
+        self.interrupt = u'\u0001'
+        self.pad = u'\u0000'
+
+        self.initCrypto(password,  initialVector)
+
+    def initCrypto(self, password, initialVector):
+        self._cipherForEncryption = AES.new(password, AES.MODE_CBC, initialVector)
+        self._cipherForDecryption = AES.new(password, AES.MODE_CBC, initialVector)
+
+    def __addPadding(self, data):
+        _newData = ''.join([data, interrupt])
+        _newDataLen = len(_newData)
+        _remainingLen = self.blockSize - _newDataLen
+        _toPadLen = _remainingLen % self.blockSize
+        _padString = self.pad * _toPadLen
+        return ''.join([_newData, _padString])
+
+    def __stripPadding(self, data):
+        try:
+            return data.rstrip(self.pad).rstrip(self.interrupt)
+        except UnicodeDecodeError, e:
+            print e
+            return None
+
+    def encryptData(self, plaintextData):
+        _plaintextPadded = self.__addPadding(plaintextData)
+        _encryptedData = self._cipherForEncryption.encrypt(_plaintextPadded)
+        return _encryptedData
+
+
+    def decryptData(self, encryptedData):
+        _decryptedData = self._cipherForDecryption.decrypt(encryptedData)
+        return self.__stripPadding(_decryptedData)
+
+class frickelSQLite(object):
+    def __init__(self, filename):
+        self.sqlite = sqlite3.connect(filename)
+
 class PasspharseDialog(QtGui.QWidget):
     def __init__(self):
         super(PasspharseDialog, self).__init__()
@@ -71,7 +112,6 @@ class PasswordWindow(QtGui.QWidget):
         self.width = width
         self.heigh = height
         self.passw = password
-        self.sqlite = sqlite3.connect(filename)
         self.initCrypto()
         self.initUI()
 
@@ -151,33 +191,6 @@ class PasswordWindow(QtGui.QWidget):
         # and action
         self.show()
 
-    def _addPadding(self, data, interrupt, pad, blockSize):
-        _newData = ''.join([data, interrupt])
-        _newDataLen = len(_newData)
-        _remainingLen = blockSize - _newDataLen
-        _toPadLen = _remainingLen % blockSize
-        _padString = pad * _toPadLen
-        return ''.join([_newData, _padString])
-
-    def _stripPadding(self, data, interrupt, pad):
-        try:
-            return data.rstrip(pad).rstrip(interrupt)
-        except UnicodeDecodeError, e:
-            print e
-            return data
-
-    def _encryptDataAES(self, encryptCipher, plaintextData):
-        _plaintextPadded = self._addPadding(plaintextData, self.INTERRUPT, self.PAD, self.BLOCK_SIZE)
-        _encryptedData = encryptCipher.encrypt(_plaintextPadded)
-        return b64encode(_encryptedData)
-
-
-    def _decryptDataAES(self, decryptCipher, encryptedData):
-        _decodedEncryptedData = b64decode(encryptedData)
-        _decryptedData = decryptCipher.decrypt(_decodedEncryptedData)
-        return self._stripPadding(_decryptedData, self.INTERRUPT, self.PAD)
-
-
     def _getDataFromDatabase(self):
         _sqliteSelect = '''
                  SELECT      
@@ -247,20 +260,24 @@ class PasswordWindow(QtGui.QWidget):
             if conn:
                 conn.close()
 
+    def _deleteDataFromDatabase(self,  id):
+        pass
+
     def _changeTab(self, index):
         """
         mal schau, was man hier noch machen kann
         """
         if index == 0:
             pass
-            #self._tabGen1()
-            #self.repaint()
         elif index == 1:
             pass
-            #self._userInput.setText("")
-            #self._passInput.setText("")
-            #self._pwvfInput.setText("")
-            #self._descInput.setText("")
+        elif index == 2:
+            pass
+        elif index == 3:
+            pass
+        else:
+            print "Hier stimmt was nicht :D!"
+
 
     def _buttonOk(self):
         _error = ""
@@ -291,6 +308,12 @@ class PasswordWindow(QtGui.QWidget):
         self._pwvfInput.setText("")
         self._descInput.setText("")
         self._statInput.setText("Fields cleared!")
+
+    def _tabGen4(self):
+        pass
+
+    def _tabGen3(self):
+        pass
 
     def _tabGen2(self):
         self._tab2Vertical = QtGui.QGridLayout(self._tab2)
