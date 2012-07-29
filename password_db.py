@@ -66,6 +66,80 @@ class frickelSQLite(object):
     def __init__(self, filename):
         self.sqlite = sqlite3.connect(filename)
 
+    def selectData(self):
+        """
+        ToDo:
+            * selectData need SQL select per input
+        """
+        _sqliteSelect = '''
+                 SELECT      
+                    Benutzer  
+                    , Passwort  
+                    , Bemerkung 
+                FROM         
+                    password 
+                ORDER BY 
+                    ID
+                '''
+        try:
+            conn = self.sqlite.cursor()
+            _rows = conn.execute(_sqliteSelect)
+        except:
+            """
+            ToDo:
+                * better error handling
+                    * sqlite3.OperationalError
+            """
+            error = False
+            
+        else:
+            error = _rows.fetchall()
+        finally:
+            if conn:
+                conn.close()
+            return error
+   
+    def insertData(self,  data):        
+        try: 
+            conn = self.sqlite.cursor()
+            conn.execute("INSERT INTO password VALUES (NULL,?,?,?)", data)
+            self.sqlite.commit()
+        except:
+            """
+            ToDo:
+                * better error handling
+                    * sqlite3.Error
+            """
+            error = False
+        else:
+            error = True
+        finally:
+            if conn:
+                conn.close()
+            return error
+
+    def deleteData(self, id):
+        pass
+        
+    def createTable(self):
+        try:
+            conn = self.sqlite.cursor()
+            conn.execute('''CREATE TABLE password
+                    (id INTEGER PRIMARY KEY, Benutzer TEXT, Passwort TEXT, Bemerkung TEXT)''')
+            self.sqlite.commit()
+        except:
+            """
+            ToDo:
+                * better error handling
+            """
+            error = False
+        else:
+            error = True
+        finally:
+            if conn:
+                conn.close()
+            return error
+
 class PasspharseDialog(QtGui.QWidget):
     def __init__(self):
         super(PasspharseDialog, self).__init__()
@@ -111,21 +185,9 @@ class PasswordWindow(QtGui.QWidget):
         self.title = title
         self.width = width
         self.heigh = height
-        self.passw = password
-        self.initCrypto()
+        self.crypto = frickelAES_CBC(password,  u'12345678abcdefgh')
+        self.sql = frickelSQLite(filename)
         self.initUI()
-
-    def initCrypto(self):
-        self.BLOCK_SIZE = 32
-        self.INTERRUPT = u'\u0001'
-        self.PAD = u'\u0000'
-
-        # hmmm geht es auch anders?
-        _initialVector = u'12345678abcdefgh'
-
-        self._cipherForEncryption = AES.new(self.passw, AES.MODE_CBC, _initialVector)
-        self._cipherForDecryption = AES.new(self.passw, AES.MODE_CBC, _initialVector)
-
 
     def initUI(self):
         self.setGeometry(
@@ -174,9 +236,7 @@ class PasswordWindow(QtGui.QWidget):
         _tabWidget.addTab(self._tab4, u"Suchen")
 
         self._tabGen1()
-
         self._tabGen2()
-        #_tab2Vertical.addWidget(self._tabGen2())
 
         _vbox = QtGui.QVBoxLayout()
         _vbox.addWidget(_menuBar)
@@ -190,78 +250,6 @@ class PasswordWindow(QtGui.QWidget):
 
         # and action
         self.show()
-
-    def _getDataFromDatabase(self):
-        _sqliteSelect = '''
-                 SELECT      
-                    Benutzer  
-                    , Passwort  
-                    , Bemerkung 
-                FROM         
-                    password 
-                ORDER BY 
-                    ID
-                '''
-        try:
-            conn = self.sqlite.cursor()
-            _rows = conn.execute(_sqliteSelect)
-        except sqlite3.OperationalError, e:
-            print("Database not available, try to create:\n %s" % e.args[0])
-            _sqliteInput = (
-                    self._encryptDataAES(self._cipherForEncryption, u'some user')
-                    , self._encryptDataAES(self._cipherForEncryption, u'some password')
-                    , self._encryptDataAES(self._cipherForEncryption, u'some description')
-                    )
-
-            try:
-                conn.execute('''CREATE TABLE password
-                    (id INTEGER PRIMARY KEY, Benutzer TEXT, Passwort TEXT, Bemerkung TEXT)''')
-                conn.execute("INSERT INTO password VALUES (NULL,?,?,? )", _sqliteInput)
-                self.sqlite.commit()
-                _rows = conn.execute(_sqliteSelect)
-            except:
-                print("Someting went wrong ;)!")
-                
-        else:
-            pass
-        finally:
-            self._sqliteData = _rows.fetchall()
-            if conn:
-                conn.close()
-
-    def _insertDataToDatabase(self):
-        _sqliteInput = (
-                self._encryptDataAES(self._cipherForEncryption, unicode(str(self._userInput.text())))
-                , self._encryptDataAES(self._cipherForEncryption, unicode(str(self._passInput.text())))
-                , self._encryptDataAES(self._cipherForEncryption, unicode(str(self._descInput.toPlainText())))
-                )
-        try: 
-            conn = self.sqlite.cursor()
-            conn.execute("INSERT INTO password VALUES (NULL,?,?,?)", _sqliteInput)
-            self.sqlite.commit()
-        except sqlite3.Error, e:
-            self._statInput.setText("SQLite input fail!")
-            print("Oops!\n %s" % e.args[0])
-        else:
-            self._statInput.setText("Done")
-
-            _numRows = self._dataGrid.rowCount()
-            self._dataGrid.insertRow(_numRows)
-
-            _rowUser = QtGui.QTableWidgetItem(self._userInput.text())
-            _rowPass = QtGui.QTableWidgetItem(self._passInput.text())
-            _rowDesc = QtGui.QTableWidgetItem(self._descInput.toPlainText())
-            
-            self._dataGrid.setItem(_numRows, 0, _rowUser)
-            self._dataGrid.setItem(_numRows, 1, _rowPass)
-            self._dataGrid.setItem(_numRows, 2, _rowDesc)
-            
-        finally:
-            if conn:
-                conn.close()
-
-    def _deleteDataFromDatabase(self,  id):
-        pass
 
     def _changeTab(self, index):
         """
@@ -408,7 +396,7 @@ class PasswordWindow(QtGui.QWidget):
 
     def mousePressEvent(self, event):
         print(event, event.key())
-
+ 
 def main():
 
     app = QtGui.QApplication(sys.argv)
