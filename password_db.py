@@ -27,51 +27,50 @@ from base64 import b64decode
 
 class frickelAES_CBC(object):
     def __init__(self, password, initialvector):
-        self.blockSize = 32
-        self.interrupt = u'\u0001'
-        self.pad = u'\u0000'
+        self.__blockSize = 32
+        self.__interrupt = u'\u0001'
+        self.__pad = u'\u0000'
 
-        self.initCrypto(password,  initialVector)
+        self.initCrypto(password,  initialvector)
 
     def initCrypto(self, password, initialVector):
-        self._cipherForEncryption = AES.new(password, AES.MODE_CBC, initialVector)
-        self._cipherForDecryption = AES.new(password, AES.MODE_CBC, initialVector)
+        self.__cipherForEncryption = AES.new(password, AES.MODE_CBC, initialVector)
+        self.__cipherForDecryption = AES.new(password, AES.MODE_CBC, initialVector)
 
     def __addPadding(self, data):
-        _newData = ''.join([data, interrupt])
-        _newDataLen = len(_newData)
-        _remainingLen = self.blockSize - _newDataLen
-        _toPadLen = _remainingLen % self.blockSize
-        _padString = self.pad * _toPadLen
-        return ''.join([_newData, _padString])
+        newData = ''.join([data, self.__interrupt])
+        newDataLen = len(newData)
+        remainingLen = self.__blockSize - newDataLen
+        toPadLen = remainingLen % self.__blockSize
+        padString = self.__pad * toPadLen
+        return ''.join([newData, padString])
 
     def __stripPadding(self, data):
         try:
-            return data.rstrip(self.pad).rstrip(self.interrupt)
-        except UnicodeDecodeError, e:
-            print e
+            return data.rstrip(self.__pad).rstrip(self.__interrupt)
+        except:
             return None
 
     def encryptData(self, plaintextData):
-        _plaintextPadded = self.__addPadding(plaintextData)
-        _encryptedData = self._cipherForEncryption.encrypt(_plaintextPadded)
+        plaintextPadded = self.__addPadding(plaintextData)
+        encryptedData = self.__cipherForEncryption.encrypt(plaintextPadded)
         return _encryptedData
 
 
     def decryptData(self, encryptedData):
-        _decryptedData = self._cipherForDecryption.decrypt(encryptedData)
-        return self.__stripPadding(_decryptedData)
+        decryptedData = self.__cipherForDecryption.decrypt(encryptedData)
+        return self.__stripPadding(decryptedData)
 
 class frickelSQLite(object):
     def __init__(self, filename):
-        self.sqlite = sqlite3.connect(filename)
+        self.__sqlite = sqlite3.connect(filename)
 
     def selectData(self):
         """
         ToDo:
             * selectData need SQL select per input
         """
-        _sqliteSelect = '''
+        sqliteSelect = '''
                  SELECT      
                     Benutzer  
                     , Passwort  
@@ -82,8 +81,8 @@ class frickelSQLite(object):
                     ID
                 '''
         try:
-            conn = self.sqlite.cursor()
-            _rows = conn.execute(_sqliteSelect)
+            conn = self.__sqlite.cursor()
+            rows = conn.execute(sqliteSelect)
         except:
             """
             ToDo:
@@ -93,7 +92,7 @@ class frickelSQLite(object):
             error = False
             
         else:
-            error = _rows.fetchall()
+            error = rows.fetchall()
         finally:
             if conn:
                 conn.close()
@@ -101,9 +100,9 @@ class frickelSQLite(object):
    
     def insertData(self,  data):        
         try: 
-            conn = self.sqlite.cursor()
+            conn = self.__sqlite.cursor()
             conn.execute("INSERT INTO password VALUES (NULL,?,?,?)", data)
-            self.sqlite.commit()
+            self.__sqlite.commit()
         except:
             """
             ToDo:
@@ -123,10 +122,10 @@ class frickelSQLite(object):
         
     def createTable(self):
         try:
-            conn = self.sqlite.cursor()
+            conn = self.__sqlite.cursor()
             conn.execute('''CREATE TABLE password
                     (id INTEGER PRIMARY KEY, Benutzer TEXT, Passwort TEXT, Bemerkung TEXT)''')
-            self.sqlite.commit()
+            self.__sqlite.commit()
         except:
             """
             ToDo:
@@ -154,7 +153,7 @@ class PasspharseDialog(QtGui.QWidget):
                 , QtGui.QLineEdit.Password)
         if ok:
             self.PassWindow = PasswordWindow(
-                     hashlib.sha256(text + salt).digest()
+                    hashlib.sha256(text + salt).digest()
                     , '/home/janus/Projects/python/password_sqlite3.db'
                     #, '~/password_sqlite3.db'
                     )
@@ -185,11 +184,11 @@ class PasswordWindow(QtGui.QWidget):
         self.title = title
         self.width = width
         self.heigh = height
-        self.crypto = frickelAES_CBC(password,  u'12345678abcdefgh')
-        self.sql = frickelSQLite(filename)
-        self.initUI()
+        self.__crypto = frickelAES_CBC(password,  u'12345678abcdefgh')
+        self.__sql = frickelSQLite(filename)
+        self.__initUI()
 
-    def initUI(self):
+    def __initUI(self):
         self.setGeometry(
                 self.width
                 , self.width
@@ -199,179 +198,205 @@ class PasswordWindow(QtGui.QWidget):
         self.setWindowTitle(self.title)
 
         ## Menu
-        _open = QtGui.QAction("Open", self)
-        _save = QtGui.QAction("Save", self)
+        menuPointOpen = QtGui.QAction("Open", self)
+        menuPointSave = QtGui.QAction("Save", self)
 
-        _exit = QtGui.QAction("Quit", self)
-        _exit.setShortcut('Ctrl+Q')
-        _exit.setStatusTip('Exit application')
-        _exit.triggered.connect(self.close)
+        menuPointExit = QtGui.QAction("Quit", self)
+        menuPointExit.setShortcut('Ctrl+Q')
+        menuPointExit.setStatusTip('Exit application')
+        menuPointExit.triggered.connect(self.close)
 
-        _hilfe = QtGui.QAction("Hilfe!", self)
-        _hilfe.setShortcut('Ctrl+H')
-        _hilfe.setStatusTip('Help application')
-        _hilfe.triggered.connect(self._menuHelp)
+        menuPointHilfe = QtGui.QAction("Hilfe!", self)
+        menuPointHilfe.setShortcut('Ctrl+H')
+        menuPointHilfe.setStatusTip('Help application')
+        menuPointHilfe.triggered.connect(self.__menuHelp)
 
-        _menuBar = QtGui.QMenuBar()
+        menuBar = QtGui.QMenuBar()
 
-        _file = _menuBar.addMenu("&File")
-        _file.addAction(_open)
-        _file.addAction(_save)
-        _file.addAction(_exit)
+        menuFile = menuBar.addMenu("&File")
+        menuFile.addAction(menuPointOpen)
+        menuFile.addAction(menuPointSave)
+        menuFile.addAction(menuPointExit)
 
-        _help = _menuBar.addMenu("&Help")
-        _help.addAction(_hilfe)
+        menuHelp = menuBar.addMenu("&Help")
+        menuHelp.addAction(menuPointHilfe)
 
         ## tabss
-        _tabWidget = QtGui.QTabWidget()
+        tabWidget = QtGui.QTabWidget()
 
-        self._tab1 = QtGui.QWidget()
-        self._tab2 = QtGui.QWidget()
-        self._tab3 = QtGui.QWidget()
-        self._tab4 = QtGui.QWidget()
+        self.__tab1 = QtGui.QWidget()
+        self.__tab2 = QtGui.QWidget()
+        self.__tab3 = QtGui.QWidget()
+        self.__tab4 = QtGui.QWidget()
 
-        _tabWidget.addTab(self._tab1, u"Liste")
-        _tabWidget.addTab(self._tab2, u"Hinzufügen")
-        _tabWidget.addTab(self._tab3, u"Löschen")
-        _tabWidget.addTab(self._tab4, u"Suchen")
+        tabWidget.addTab(self.__tab1, u"Liste")
+        tabWidget.addTab(self.__tab2, u"Hinzufügen")
+        tabWidget.addTab(self.__tab3, u"Löschen")
+        tabWidget.addTab(self.__tab4, u"Suchen")
 
-        self._tabGen1()
-        self._tabGen2()
+        self.__tabGen1()
+        self.__tabGen2()
 
-        _vbox = QtGui.QVBoxLayout()
-        _vbox.addWidget(_menuBar)
-        _vbox.addWidget(_tabWidget)
-        self.setLayout(_vbox)
+        verticalBox = QtGui.QVBoxLayout()
+        verticalBox.addWidget(menuBar)
+        verticalBox.addWidget(tabWidget)
+        self.setLayout(verticalBox)
 
         # signals
-        QtCore.QObject.connect(_tabWidget, QtCore.SIGNAL('currentChanged(int)'), self._changeTab)
-        QtCore.QObject.connect(self._okButton, QtCore.SIGNAL('clicked()'), self._buttonOk)
-        QtCore.QObject.connect(self._clearButton, QtCore.SIGNAL('clicked()'), self._buttonClear)
+        QtCore.QObject.connect(tabWidget, QtCore.SIGNAL('currentChanged(int)'), self.__changeTab)
+        QtCore.QObject.connect(self.__okButton, QtCore.SIGNAL('clicked()'), self.__buttonOk)
+        QtCore.QObject.connect(self.__clearButton, QtCore.SIGNAL('clicked()'), self.__buttonClear)
 
         # and action
         self.show()
 
-    def _changeTab(self, index):
+    def __getDataFromDatabase(self):
+        if self.__sql.selectData():
+            self.__rowData = self.__sql.selectData()
+        else:
+            if self.__sql.createTable():
+                self.__rowData = self.__sql.selectData()
+            else:
+                self.__rowData = None
+
+    def __insertDataToDatabase(self):
+        dataInput = (
+                    b64encode(self.__crypto.encryptData(self.__userInput.text()))
+                    ,  b64encode(self.__crypto.encryptData(self.__passInput.text()))
+                    ,  b64encode(self.__crypto.encryptData(self.__descInput.toPlainText()))
+                    )
+        if self.__sql.insertData(dataInput):
+            return True
+        else:
+            return False
+
+    def __changeTab(self, index):
         """
         mal schau, was man hier noch machen kann
+        index = int([1-4])
         """
-        if index == 0:
-            pass
-        elif index == 1:
-            pass
-        elif index == 2:
-            pass
-        elif index == 3:
-            pass
-        else:
-            print "Hier stimmt was nicht :D!"
+        pass
 
+    def __buttonOk(self):
+        error = False
+        if not self.__userInput.text():
+            if not error:
+                error = "Fields empty!"
+        if not self.__passInput.text() or not self.__pwvfInput.text():
+            if not error:
+                error = "Fields empty!"
+        elif self.__passInput.text() != self.__pwvfInput.text():
+            if not error:
+                error = "Password not the same!"
+        if not self.__descInput.toPlainText():
+            if not error:
+                error = "Fields empty!"
 
-    def _buttonOk(self):
-        _error = ""
-        if not self._userInput.text():
-            if not _error:
-                _error = "Fields empty!"
-        if not self._passInput.text() or not self._pwvfInput.text():
-            if not _error:
-                _error = "Fields empty!"
-        elif self._passInput.text() != self._pwvfInput.text():
-            if not _error:
-                _error = "Password not the same!"
-        if not self._descInput.toPlainText():
-            if not _error:
-                _error = "Fields empty!"
-
-        if _error:
-            self._statInput.setText(_error)
+        if error:
+            self.__statInput.setText(error)
         else:
             # das ist mist ;), wenn ich das schon intern speicher muss ich das auch nicht noch übergeben
             #self._insertDataToDatabase(self._userInput.text(), self._passInput.text(), self._descInput.toPlainText())
             # so ist schöner glaub ich
-            self._insertDataToDatabase()
+            if self.__insertDataToDatabase():
+                self.__statInput.setText("Done")
 
-    def _buttonClear(self):
-        self._userInput.setText("")
-        self._passInput.setText("")
-        self._pwvfInput.setText("")
-        self._descInput.setText("")
-        self._statInput.setText("Fields cleared!")
+                numRows = self.__dataGrid.rowCount()
+                self.__dataGrid.insertRow(numRows)
 
-    def _tabGen4(self):
+                rowUser = QtGui.QTableWidgetItem(self.__userInput.text())
+                rowPass = QtGui.QTableWidgetItem(self.__passInput.text())
+                rowDesc = QtGui.QTableWidgetItem(self.__descInput.toPlainText())
+                
+                self.__dataGrid.setItem(numRows, 0, rowUser)
+                self.__dataGrid.setItem(numRows, 1, rowPass)
+                self.__dataGrid.setItem(numRows, 2, rowDesc)
+            else:
+                self.__statInput.setText("SQLite input fail!")
+
+    def __buttonClear(self):
+        self.__userInput.setText("")
+        self.__passInput.setText("")
+        self.__pwvfInput.setText("")
+        self.__descInput.setText("")
+        self.__statInput.setText("Fields cleared!")
+
+    def __tabGen4(self):
         pass
 
-    def _tabGen3(self):
+    def __tabGen3(self):
         pass
 
-    def _tabGen2(self):
-        self._tab2Vertical = QtGui.QGridLayout(self._tab2)
-        self._tab2Vertical.setSpacing(10)
+    def __tabGen2(self):
+        tab2Vertical = QtGui.QGridLayout(self.__tab2)
+        tab2Vertical.setSpacing(10)
 
-        _userLabel = QtGui.QLabel('Benutzer:')
-        _passLabel = QtGui.QLabel('Passwort:')
-        _pwvfLabel = QtGui.QLabel('Passwort Verfication:')
-        _descLabel = QtGui.QLabel('Bemerkung:')
-        _statLabel = QtGui.QLabel('Status:')
+        userLabel = QtGui.QLabel('Benutzer:')
+        passLabel = QtGui.QLabel('Passwort:')
+        pwvfLabel = QtGui.QLabel('Passwort Verfication:')
+        descLabel = QtGui.QLabel('Bemerkung:')
+        statLabel = QtGui.QLabel('Status:')
 
-        self._userInput = QtGui.QLineEdit()
-        self._passInput = QtGui.QLineEdit()
-        self._passInput.setEchoMode(2)
-        self._pwvfInput = QtGui.QLineEdit()
-        self._pwvfInput.setEchoMode(2)
-        self._descInput = QtGui.QTextEdit()
-        self._statInput = QtGui.QLabel(self)
+        self.__userInput = QtGui.QLineEdit()
+        self.__passInput = QtGui.QLineEdit()
+        self.__passInput.setEchoMode(2)
+        self.__pwvfInput = QtGui.QLineEdit()
+        self.__pwvfInput.setEchoMode(2)
+        self.__descInput = QtGui.QTextEdit()
+        self.__statInput = QtGui.QLabel(self)
 
-        self._okButton = QtGui.QPushButton("OK")
-        self._clearButton = QtGui.QPushButton("Clear")
+        self.__okButton = QtGui.QPushButton("OK")
+        self.__clearButton = QtGui.QPushButton("Clear")
 
-        self._tab2Vertical.addWidget(_userLabel, 1, 0)
-        self._tab2Vertical.addWidget(self._userInput, 1, 1)
+        tab2Vertical.addWidget(userLabel, 1, 0)
+        tab2Vertical.addWidget(self.__userInput, 1, 1)
 
-        self._tab2Vertical.addWidget(_passLabel, 2, 0)
-        self._tab2Vertical.addWidget(self._passInput, 2, 1)
+        tab2Vertical.addWidget(passLabel, 2, 0)
+        tab2Vertical.addWidget(self.__passInput, 2, 1)
 
-        self._tab2Vertical.addWidget(_pwvfLabel, 3, 0)
-        self._tab2Vertical.addWidget(self._pwvfInput, 3, 1)
+        tab2Vertical.addWidget(pwvfLabel, 3, 0)
+        tab2Vertical.addWidget(self.__pwvfInput, 3, 1)
 
-        self._tab2Vertical.addWidget(_descLabel, 4, 0)
-        self._tab2Vertical.addWidget(self._descInput, 4, 1, 5, 1)
+        tab2Vertical.addWidget(descLabel, 4, 0)
+        tab2Vertical.addWidget(self.__descInput, 4, 1, 5, 1)
 
-        self._tab2Vertical.addWidget(_statLabel, 9, 0)
-        self._tab2Vertical.addWidget(self._statInput, 9, 1)
+        tab2Vertical.addWidget(statLabel, 9, 0)
+        tab2Vertical.addWidget(self.__statInput, 9, 1)
 
-        self._tab2Vertical.addWidget(self._okButton, 10, 0)
-        self._tab2Vertical.addWidget(self._clearButton, 10, 1)
+        tab2Vertical.addWidget(self.__okButton, 10, 0)
+        tab2Vertical.addWidget(self.__clearButton, 10, 1)
 
-    def _tabGen1(self):
-        self._getDataFromDatabase()
-        _rows = self._sqliteData
-
-        _headers = ["Benutzer", "Password", "BEMERKUNG"]
-        self._dataGrid = QtGui.QTableWidget()
-        self._dataGrid.setRowCount(len(_rows))
-        self._dataGrid.setColumnCount(len(_headers))
-        self._dataGrid.setAlternatingRowColors(True)
-        self._dataGrid.setHorizontalHeaderLabels(_headers)
+    def __tabGen1(self):
+        self.__getDataFromDatabase()
+        headers = ["Benutzer", "Password", "BEMERKUNG"]
+        self.__dataGrid = QtGui.QTableWidget()
+        self.__dataGrid.setRowCount(len(self.__rowData))
+        self.__dataGrid.setColumnCount(len(headers))
+        self.__dataGrid.setAlternatingRowColors(True)
+        self.__dataGrid.setHorizontalHeaderLabels(headers)
         
         n = 0
-        for key in range(0, len(_rows)):
+        #print type(self.__rowData)
+        for key in range(n, len(self.__rowData)):
             m = 0
-            for item in _rows[key]:
-                self._dataGrid.setItem(
+            for item in self.__rowData[key]:
+                #print type(self.__crypto.decryptData(b64decode(item)))
+                self.__dataGrid.setItem(
                         n
                         , m
-                        , QtGui.QTableWidgetItem(self._decryptDataAES(self._cipherForEncryption, item))
+                        , QtGui.QTableWidgetItem(self.__crypto.decryptData(b64decode(item)))
+                        #, QtGui.QTableWidgetItem("asdf")
                         )
                 m += 1
             n += 1
 
         # set table width
-        self._dataGrid.resizeColumnsToContents()
+        self.__dataGrid.resizeColumnsToContents()
 
-        self._tab1Vertical = QtGui.QVBoxLayout(self._tab1)
-        self._tab1Vertical.addWidget(self._dataGrid)
+        tab1Vertical = QtGui.QVBoxLayout(self.__tab1)
+        tab1Vertical.addWidget(self.__dataGrid)
 
-    def _menuHelp(self):
+    def __menuHelp(self):
         QtGui.QMessageBox.information(
                 self
                 , "Dies ist die Hilfe"
