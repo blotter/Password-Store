@@ -31,9 +31,9 @@ class frickelAES_CBC(object):
         self.__interrupt = u'\u0001'
         self.__pad = u'\u0000'
 
-        self.initCrypto(password,  initialvector)
+        self.__initCrypto(password,  initialvector)
 
-    def initCrypto(self, password, initialVector):
+    def __initCrypto(self, password, initialVector):
         self.__cipherForEncryption = AES.new(password, AES.MODE_CBC, initialVector)
         self.__cipherForDecryption = AES.new(password, AES.MODE_CBC, initialVector)
 
@@ -43,18 +43,16 @@ class frickelAES_CBC(object):
         remainingLen = self.__blockSize - newDataLen
         toPadLen = remainingLen % self.__blockSize
         padString = self.__pad * toPadLen
+        print ''.join([newData, padString])
         return ''.join([newData, padString])
 
     def __stripPadding(self, data):
-        try:
-            return data.rstrip(self.__pad).rstrip(self.__interrupt)
-        except:
-            return None
+        return data.decode('utf8',  'ignore').rstrip(self.__pad).rstrip(self.__interrupt)
 
     def encryptData(self, plaintextData):
         plaintextPadded = self.__addPadding(plaintextData)
         encryptedData = self.__cipherForEncryption.encrypt(plaintextPadded)
-        return _encryptedData
+        return encryptedData
 
 
     def decryptData(self, encryptedData):
@@ -255,6 +253,12 @@ class PasswordWindow(QtGui.QWidget):
             self.__rowData = self.__sql.selectData()
         else:
             if self.__sql.createTable():
+                dataInput = (
+                            b64encode(self.__crypto.encryptData(u'some User'))
+                            , b64encode(self.__crypto.encryptData(u'some Password'))
+                            , b64encode(self.__crypto.encryptData(u'some Description'))
+                            )
+                self.__sql.insertData(dataInput)
                 self.__rowData = self.__sql.selectData()
             else:
                 self.__rowData = None
@@ -376,16 +380,13 @@ class PasswordWindow(QtGui.QWidget):
         self.__dataGrid.setHorizontalHeaderLabels(headers)
         
         n = 0
-        #print type(self.__rowData)
         for key in range(n, len(self.__rowData)):
             m = 0
             for item in self.__rowData[key]:
-                #print type(self.__crypto.decryptData(b64decode(item)))
                 self.__dataGrid.setItem(
                         n
                         , m
                         , QtGui.QTableWidgetItem(self.__crypto.decryptData(b64decode(item)))
-                        #, QtGui.QTableWidgetItem("asdf")
                         )
                 m += 1
             n += 1
