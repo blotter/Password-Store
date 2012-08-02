@@ -115,8 +115,19 @@ class frickelSQLite(object):
                 conn.close()
             return error
 
-    def deleteData(self, id):
-        pass
+    def deleteData(self, rowid):
+        try:
+            conn = self.__sqlite.cursor()
+            conn.execute("DELETE FROM password WHERE id=?", (rowid,))
+            self.__sqlite.commit()
+        except:
+            error = False
+        else:
+            error = True
+        finally:
+            if conn:
+                conn.close()
+            return error
         
     def createTable(self):
         try:
