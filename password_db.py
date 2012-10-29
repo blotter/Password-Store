@@ -38,7 +38,7 @@ class frickelAES_CBC(object):
         self.__cipherForDecryption = AES.new(password, AES.MODE_CBC, initialVector)
 
     def __addPadding(self, data):
-        newData = ''.join([data, self.__interrupt])
+        newData = ''.join( map( str, [data, self.__interrupt] ))
         newDataLen = len(newData)
         remainingLen = self.__blockSize - newDataLen
         toPadLen = remainingLen % self.__blockSize
