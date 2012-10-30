@@ -148,6 +148,16 @@ class frickelSQLite(object):
                 conn.close()
             return error
 
+class frickelConfig(object):
+    def __init__(self):
+	pass
+
+    def save(self):
+	pass
+
+    def load(self):
+	pass
+
 class PasspharseDialog(QtGui.QWidget):
     def __init__(self):
         super(PasspharseDialog, self).__init__()
@@ -275,6 +285,11 @@ class PasswordWindow(QtGui.QWidget):
                 self.__rowData = None
 
     def __insertDataToDatabase(self):
+	"""
+	FIXME:
+	  * the first row of first input allready failed to insert becouse
+	    the encryption fails
+	"""
         dataInput = (
                     b64encode(self.__crypto.encryptData(self.__userInput.text()))
                     ,  b64encode(self.__crypto.encryptData(self.__passInput.text()))
