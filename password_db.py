@@ -19,6 +19,7 @@
 import sys
 import hashlib
 import sqlite3
+import os.path
 from Crypto.Cipher import AES
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -173,8 +174,8 @@ class PasspharseDialog(QtGui.QWidget):
         if ok:
             self.PassWindow = PasswordWindow(
                     hashlib.sha256(text + salt).digest()
-                    , '/home/janus/Projects/python/password_sqlite3.db'
-                    #, '~/password_sqlite3.db'
+                    # letzter teil wird ersetzt durch var aus frickelConfig
+                    , os.path.join(os.path.expanduser('~'), "Projects/python/password_sqlite3.db")
                     )
         else:
             print "Und zu?"
@@ -287,7 +288,7 @@ class PasswordWindow(QtGui.QWidget):
     def __insertDataToDatabase(self):
 	"""
 	FIXME:
-	  * the first row of first input allready failed to insert becouse
+	  * the first row of first input allready failed to insert because
 	    the encryption fails
 	"""
         dataInput = (
