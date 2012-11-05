@@ -327,7 +327,7 @@ class PasswordWindow(QtGui.QWidget):
             #self._insertDataToDatabase(self._userInput.text(), self._passInput.text(), self._descInput.toPlainText())
             # so ist schöner glaub ich
             if self.__insertDataToDatabase():
-                self.__statInput.setText("Done")
+                #self.__statInput.setText("Done")
 
                 numRows = self.__dataGrid.rowCount()
                 self.__dataGrid.insertRow(numRows)
@@ -339,15 +339,16 @@ class PasswordWindow(QtGui.QWidget):
                 self.__dataGrid.setItem(numRows, 0, rowUser)
                 self.__dataGrid.setItem(numRows, 1, rowPass)
                 self.__dataGrid.setItem(numRows, 2, rowDesc)
+                self.__buttonClear("Done!")
             else:
                 self.__statInput.setText("SQLite input fail!")
 
-    def __buttonClear(self):
+    def __buttonClear(self, text=u'Felder gelöscht!'):
         self.__userInput.setText("")
         self.__passInput.setText("")
         self.__pwvfInput.setText("")
         self.__descInput.setText("")
-        self.__statInput.setText("Fields cleared!")
+        self.__statInput.setText(text)
 
     def __tabGen4(self):
         pass
