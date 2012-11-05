@@ -32,19 +32,14 @@ class frickelAES_CBC(object):
         self.__interrupt = u'\u0001'
         self.__pad = u'\u0000'
 
-        self.__initCrypto(password,  initialvector)
+        self.__initCrypto(password, initialvector)
 
     def __initCrypto(self, password, initialVector):
-        self.__cipherForEncryption = AES.new(password, AES.MODE_CBC, initialVector)
-        self.__cipherForDecryption = AES.new(password, AES.MODE_CBC, initialVector)
+        self.__cipher = AES.new(password, AES.MODE_CBC, initialVector)
 
     def __addPadding(self, data):
         newData = ''.join( map( str, [data, self.__interrupt] ))
-        newDataLen = len(newData)
-        remainingLen = self.__blockSize - newDataLen
-        toPadLen = remainingLen % self.__blockSize
-        padString = self.__pad * toPadLen
-        print ''.join([newData, padString])
+        padString = self.__pad * (self.__blockSize - (len(newData) % self.__blockSize))
         return ''.join([newData, padString])
 
     def __stripPadding(self, data):
@@ -52,12 +47,13 @@ class frickelAES_CBC(object):
 
     def encryptData(self, plaintextData):
         plaintextPadded = self.__addPadding(plaintextData)
-        encryptedData = self.__cipherForEncryption.encrypt(plaintextPadded)
-        return encryptedData
+        #encryptedData = self.__cipher.encrypt(plaintextPadded)
+        #return encryptedData
+        return self.__cipher.encrypt(plaintextPadded)
 
 
     def decryptData(self, encryptedData):
-        decryptedData = self.__cipherForDecryption.decrypt(encryptedData)
+        decryptedData = self.__cipher.decrypt(encryptedData)
         return self.__stripPadding(decryptedData)
 
 class frickelSQLite(object):
@@ -75,7 +71,7 @@ class frickelSQLite(object):
                     , Passwort  
                     , Bemerkung 
                 FROM         
-                    password 
+                    password
                 ORDER BY 
                     ID
                 '''
@@ -204,7 +200,13 @@ class PasswordWindow(QtGui.QWidget):
         self.title = title
         self.width = width
         self.heigh = height
-        self.__crypto = frickelAES_CBC(password,  u'12345678abcdefgh')
+        self.__crypto = frickelAES_CBC(password, u'12345678abcdefgh')
+        
+        # Test Foo
+        self.__testFuu = "DieKuhLiefUmDenTeich"
+        self.__testFoo = self.__crypto.encryptData(self.__testFuu)
+        self.__crypto.decryptData(self.__testFoo)
+        
         self.__sql = frickelSQLite(filename)
         self.__initUI()
 
@@ -286,11 +288,6 @@ class PasswordWindow(QtGui.QWidget):
                 self.__rowData = None
 
     def __insertDataToDatabase(self):
-	"""
-	FIXME:
-	  * the first row of first input allready failed to insert because
-	    the encryption fails
-	"""
         dataInput = (
                     b64encode(self.__crypto.encryptData(self.__userInput.text()))
                     ,  b64encode(self.__crypto.encryptData(self.__passInput.text()))
@@ -420,6 +417,8 @@ class PasswordWindow(QtGui.QWidget):
 
         # set table width
         self.__dataGrid.resizeColumnsToContents()
+        # lösche erste Zeile mit some(User, Passwort und Bemerkung)
+        self.__dataGrid.removeRow(0)
 
         tab1Vertical = QtGui.QVBoxLayout(self.__tab1)
         tab1Vertical.addWidget(self.__dataGrid)
