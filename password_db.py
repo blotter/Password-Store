@@ -220,17 +220,17 @@ class PasswordWindow(QtGui.QWidget):
         self.setWindowTitle(self.title)
 
         ## Menu
-        menuPointOpen = QtGui.QAction("Open", self)
-        menuPointSave = QtGui.QAction("Save", self)
+        menuPointOpen = QtGui.QAction(u'Öffnen', self)
+        menuPointSave = QtGui.QAction(u'Speichern', self)
 
         menuPointExit = QtGui.QAction("Quit", self)
         menuPointExit.setShortcut('Ctrl+Q')
-        menuPointExit.setStatusTip('Exit application')
+        menuPointExit.setStatusTip('Exit Anwendung')
         menuPointExit.triggered.connect(self.close)
 
         menuPointHilfe = QtGui.QAction("Hilfe!", self)
         menuPointHilfe.setShortcut('Ctrl+H')
-        menuPointHilfe.setStatusTip('Help application')
+        menuPointHilfe.setStatusTip('Hilfe Anwendung')
         menuPointHilfe.triggered.connect(self.__menuHelp)
 
         menuBar = QtGui.QMenuBar()
@@ -309,16 +309,16 @@ class PasswordWindow(QtGui.QWidget):
         error = False
         if not self.__userInput.text():
             if not error:
-                error = "Fields empty!"
+                error = "Feld(er) leer!"
         if not self.__passInput.text() or not self.__pwvfInput.text():
             if not error:
-                error = "Fields empty!"
+                error = "Feld(er) leer!"
         elif self.__passInput.text() != self.__pwvfInput.text():
             if not error:
-                error = "Password not the same!"
+                error = u'Password nicht übereinstimmend!'
         if not self.__descInput.toPlainText():
             if not error:
-                error = "Fields empty!"
+                error = "Feld(er) leer!"
 
         if error:
             self.__statInput.setText(error)
@@ -339,9 +339,9 @@ class PasswordWindow(QtGui.QWidget):
                 self.__dataGrid.setItem(numRows, 0, rowUser)
                 self.__dataGrid.setItem(numRows, 1, rowPass)
                 self.__dataGrid.setItem(numRows, 2, rowDesc)
-                self.__buttonClear("Done!")
+                self.__buttonClear("Fertig!")
             else:
-                self.__statInput.setText("SQLite input fail!")
+                self.__statInput.setText("SQLite fehlgeschlagen!")
 
     def __buttonClear(self, text=u'Felder gelöscht!'):
         self.__userInput.setText("")
