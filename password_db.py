@@ -37,10 +37,15 @@ class frickelAES_CBC(object):
     def __initCrypto(self, password, initialVector):
         self.__cipher = AES.new(password, AES.MODE_CBC, initialVector)
 
+                # add an interrupt char
+                # add padding until the block is full, add a whole block of padding, if data+interrupt==32 (TODO?)
     def __addPadding(self, data):
-        newData = ''.join( map( str, [data, self.__interrupt] ))
-        padString = self.__pad * (self.__blockSize - (len(newData) % self.__blockSize))
-        return ''.join([newData, padString])
+        #newData = ''.join( map( str, [data, self.__interrupt] ))
+        #print bytes(self.__interrupt)
+        newData = unicode(data+self.__interrupt).encode('utf-8') #FIXME 
+        padString = unicode(self.__pad * (self.__blockSize - (len(newData) % self.__blockSize))).encode('utf-8')
+        #return ''.join([newData, padString])
+        return newData+padString
 
     def __stripPadding(self, data):
         return data.decode('utf8',  'ignore').rstrip(self.__pad).rstrip(self.__interrupt)
