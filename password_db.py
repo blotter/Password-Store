@@ -37,14 +37,11 @@ class frickelAES_CBC(object):
     def __initCrypto(self, password, initialVector):
         self.__cipher = AES.new(password, AES.MODE_CBC, initialVector)
 
-                # add an interrupt char
-                # add padding until the block is full, add a whole block of padding, if data+interrupt==32 (TODO?)
     def __addPadding(self, data):
-        #newData = ''.join( map( str, [data, self.__interrupt] ))
-        #print bytes(self.__interrupt)
+        # add an interrupt char
+        # add padding until the block is full, add a whole block of padding, if data+interrupt==32 (TODO?)
         newData = unicode(data+self.__interrupt).encode('utf-8') #FIXME 
         padString = unicode(self.__pad * (self.__blockSize - (len(newData) % self.__blockSize))).encode('utf-8')
-        #return ''.join([newData, padString])
         return newData+padString
 
     def __stripPadding(self, data):
@@ -52,8 +49,6 @@ class frickelAES_CBC(object):
 
     def encryptData(self, plaintextData):
         plaintextPadded = self.__addPadding(plaintextData)
-        #encryptedData = self.__cipher.encrypt(plaintextPadded)
-        #return encryptedData
         return self.__cipher.encrypt(plaintextPadded)
 
 
@@ -328,9 +323,6 @@ class PasswordWindow(QtGui.QWidget):
         if error:
             self.__statInput.setText(error)
         else:
-            # das ist mist ;), wenn ich das schon intern speicher muss ich das auch nicht noch übergeben
-            #self._insertDataToDatabase(self._userInput.text(), self._passInput.text(), self._descInput.toPlainText())
-            # so ist schöner glaub ich
             if self.__insertDataToDatabase():
                 #self.__statInput.setText("Done")
 
